@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -109,11 +110,19 @@ func (x Conn) emptyBuffer() {
 
 func findURI(db string) string {
 	base := "mongodb+srv://fwmaster.5cnit.mongodb.net/" + db + "?authSource=%24external&authMechanism=MONGODB-X509&retryWrites=true&w=majority&tlsCertificateKeyFile="
-	if _, err := os.Stat("/opt/code/cert/cert.pem"); err == nil {
-		return base + "/opt/code/cert/cert.pem"
+	cwd, _ := os.Getwd()
+	path := ""
+	// check if it's a Windows or Linux URI
+	if strings.Contains(cwd, "\\") {
+		path = cwd + "\\cert.pem"
 	} else {
-		p, _ := os.Getwd()
-		return base + p + "\\cert.pem"
+		path = cwd + "/cert.pem"
+	}
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		log.Fatalf("Could not find the cert.pem file i the CWD")
+		panic("Please copy a certificate file from mongoDB into the CWD and rename it to cert.pem")
+	} else {
+		return base + path
 	}
 }
 
