@@ -109,11 +109,11 @@ func (x Conn) emptyBuffer() {
 
 func findURI(db string) string {
 	base := "mongodb+srv://fwmaster.5cnit.mongodb.net/" + db + "?authSource=%24external&authMechanism=MONGODB-X509&retryWrites=true&w=majority&tlsCertificateKeyFile="
-	if _, err := os.Stat("/opt/code/cert/cert.pem"); os.IsNotExist(err) {
+	if _, err := os.Stat("/opt/code/cert/cert.pem"); err == nil {
 		return base + "/opt/code/cert/cert.pem"
 	} else {
 		p, _ := os.Getwd()
-		return base + p + "/cert.pem"
+		return base + p + "\\cert.pem"
 	}
 }
 
