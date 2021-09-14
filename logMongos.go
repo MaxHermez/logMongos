@@ -116,7 +116,7 @@ func findURI(db string) string {
 	if strings.Contains(cwd, "\\") {
 		path = cwd + "\\cert.pem"
 	} else {
-		path = cwd + "/cert.pem"
+		path = "/etc/ssl/certs/mongocert.pem"
 	}
 	if _, err := os.Stat(path); err != nil {
 		log.Fatalf("Could not find the cert.pem file i the CWD")
