@@ -118,7 +118,7 @@ func findURI(db string) string {
 	} else {
 		path = cwd + "/cert.pem"
 	}
-	if _, err := os.Stat(path); os.IsNotExist(err) {
+	if _, err := os.Stat(path); err != nil {
 		log.Fatalf("Could not find the cert.pem file i the CWD")
 		panic("Please copy a certificate file from mongoDB into the CWD and rename it to cert.pem")
 	} else {
