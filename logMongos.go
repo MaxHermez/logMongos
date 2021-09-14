@@ -128,6 +128,7 @@ func findURI(db string) string {
 
 func NewConn(db string) *Conn {
 	URI := findURI(db)
+	log.Println(URI)
 	return &Conn{db, URI, []Insertion{}}
 }
 
