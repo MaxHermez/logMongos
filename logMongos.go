@@ -460,9 +460,9 @@ func getClient(x Conn) (*mongo.Client, context.Context, context.CancelFunc, erro
 	clientOptions := options.Client().ApplyURI(x.URI)
 	client, err := mongo.Connect(context.TODO(), clientOptions)
 	if err != nil {
+		log.Error("Failed to get mongodb client, error message: " + err.Error())
 		cancel()
 		client.Disconnect(ctx)
-		log.Error("Failed to get mongodb client, error message: " + err.Error())
 		return nil, nil, nil, err
 	}
 	return client, ctx, cancel, nil
