@@ -3,6 +3,7 @@ package logMongos
 import (
 	"context"
 	"crypto/tls"
+	"crypto/x509"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -116,7 +117,8 @@ func parseURI(shards string, replica string, db string) string {
 	return uri
 }
 
-func getTLScert() []byte {
+func getTLSconf() *tls.Config {
+	tlsConf := &tls.Config{}
 	cwd, _ := os.Getwd()
 	path := ""
 	// check if it's a Windows or Linux URI
@@ -133,18 +135,22 @@ func getTLScert() []byte {
 		if err != nil {
 			panic("Failed to open the mongocert.pem file!")
 		}
-		return data
+		caCerts := x509.NewCertPool()
+		success := caCerts.AppendCertsFromPEM(data)
+		if !success {
+			panic("Failed to parse ca certificate as PEM encoded content!")
+		}
+		tlsConf.RootCAs = caCerts
+		return tlsConf
 	}
 }
 
 func NewConn(shards string, replica string, db string) *Conn {
 	log.SetLevel(log.TraceLevel)
 	URI := parseURI(shards, replica, db)
-	// PEMfile := getTLScert()
+	PEM := getTLSconf()
 	clientOptions := options.Client().ApplyURI(URI)
-	tlsOpts := tls.Config{}
-	// tlsOpts.ClientCAs.AppendCertsFromPEM(PEMfile)
-	clientOptions.SetTLSConfig(&tlsOpts)
+	clientOptions.SetTLSConfig(PEM)
 	return &Conn{db, URI, clientOptions, []Insertion{}}
 }
 
