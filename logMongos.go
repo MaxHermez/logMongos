@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"reflect"
 	"strings"
 	"time"
 
@@ -140,15 +141,7 @@ func getTLSconf() *tls.Config {
 		if !success {
 			panic("Failed to parse ca certificate as PEM encoded content!")
 		}
-		data, err = ioutil.ReadFile("/etc/ssl/ca-certificates.crt")
-		if err != nil {
-			panic("Failed to open the cert.pem file!")
-		}
-		success = certPool.AppendCertsFromPEM(data)
-		if !success {
-			panic("Failed to parse ca certificate as PEM encoded content!")
-		}
-		tlsConf.RootCAs = certPool
+		tlsConf.ClientCAs = certPool
 		return tlsConf
 	}
 }
@@ -158,6 +151,7 @@ func NewConn(shards string, replica string, db string) *Conn {
 	URI := parseURI(shards, replica, db)
 	clientOptions := options.Client().ApplyURI(URI)
 	PEM := getTLSconf()
+	log.Info(reflect.TypeOf(clientOptions.TLSConfig.ClientCAs).String())
 	clientOptions.SetTLSConfig(PEM)
 	return &Conn{db, URI, clientOptions, []Insertion{}}
 }
