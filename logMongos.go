@@ -333,13 +333,38 @@ func (x Conn) FindOne(colName string, lvl string, text string) (LogLine, error) 
 	coll := client.Database(x.DB).Collection(colName)
 	opts := options.FindOne().SetSort(bson.D{{Key: "timestamp", Value: -1}})
 	var result LogLine
-	err = coll.FindOne(context.TODO(), bson.D{{
-		Key: "message",
-		Value: bson.D{{
-			Key:   "$regex",
-			Value: primitive.Regex{Pattern: text, Options: "i"},
-		}},
-	}}, opts).Decode(&result)
+	if lvl != "" && text != "" { // filter by both level and text
+		err = coll.FindOne(context.TODO(), bson.D{{
+			Key: "message",
+			Value: bson.D{{
+				Key:   "$regex",
+				Value: primitive.Regex{Pattern: text, Options: "i"},
+			}}}, {
+			Key: "level",
+			Value: bson.D{{
+				Key:   "$regex",
+				Value: primitive.Regex{Pattern: lvl, Options: "i"},
+			}},
+		}}, opts).Decode(&result)
+	} else if lvl != "" { // filter by text only
+		err = coll.FindOne(context.TODO(), bson.D{{
+			Key: "message",
+			Value: bson.D{{
+				Key:   "$regex",
+				Value: primitive.Regex{Pattern: text, Options: "i"},
+			}},
+		}}, opts).Decode(&result)
+	} else if text != "" { // filter by level only
+		err = coll.FindOne(context.TODO(), bson.D{{
+			Key: "level",
+			Value: bson.D{{
+				Key:   "$regex",
+				Value: primitive.Regex{Pattern: lvl, Options: "i"},
+			}},
+		}}, opts).Decode(&result)
+	} else { // no filters
+		err = coll.FindOne(context.TODO(), bson.D{{}}, opts).Decode(&result)
+	}
 	if err != nil {
 		return LogLine{}, err
 	}
