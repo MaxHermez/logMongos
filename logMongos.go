@@ -116,7 +116,7 @@ func parseURI(shards string, replica string, db string) string {
 	return uri
 }
 
-func getTLSconf() *tls.Config {
+func getTLSconf(original *tls.Config) *tls.Config {
 	tlsConf := &tls.Config{}
 	cwd, _ := os.Getwd()
 	path := ""
@@ -134,12 +134,12 @@ func getTLSconf() *tls.Config {
 		if err != nil {
 			panic("Failed to open the mongocert.pem file!")
 		}
-		caCerts := tlsConf.ClientCAs
+		caCerts := original.RootCAs
 		success := caCerts.AppendCertsFromPEM(data)
 		if !success {
 			panic("Failed to parse ca certificate as PEM encoded content!")
 		}
-		tlsConf.RootCAs = caCerts
+		original.RootCAs = caCerts
 		return tlsConf
 	}
 }
@@ -147,8 +147,8 @@ func getTLSconf() *tls.Config {
 func NewConn(shards string, replica string, db string) *Conn {
 	log.SetLevel(log.TraceLevel)
 	URI := parseURI(shards, replica, db)
-	PEM := getTLSconf()
 	clientOptions := options.Client().ApplyURI(URI)
+	PEM := getTLSconf(clientOptions.TLSConfig)
 	clientOptions.SetTLSConfig(PEM)
 	return &Conn{db, URI, clientOptions, []Insertion{}}
 }
