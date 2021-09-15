@@ -149,8 +149,8 @@ func NewConn(shards string, replica string, db string) *Conn {
 	log.SetLevel(log.TraceLevel)
 	URI := parseURI(shards, replica, db)
 	clientOptions := options.Client().ApplyURI(URI)
-	PEM := getTLSconf()
-	clientOptions.SetTLSConfig(PEM)
+	// PEM := getTLSconf()
+	// clientOptions.SetTLSConfig(PEM)
 	return &Conn{db, URI, clientOptions, []Insertion{}}
 }
 
