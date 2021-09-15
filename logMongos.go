@@ -138,6 +138,7 @@ func getTLScert() []byte {
 }
 
 func NewConn(shards string, replica string, db string) *Conn {
+	log.SetLevel(log.TraceLevel)
 	URI := parseURI(shards, replica, db)
 	// PEMfile := getTLScert()
 	clientOptions := options.Client().ApplyURI(URI)
