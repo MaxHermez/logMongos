@@ -140,6 +140,14 @@ func getTLSconf() *tls.Config {
 		if !success {
 			panic("Failed to parse ca certificate as PEM encoded content!")
 		}
+		data, err = ioutil.ReadFile("/etc/ssl/ca-certificates.crt")
+		if err != nil {
+			panic("Failed to open the cert.pem file!")
+		}
+		success = certPool.AppendCertsFromPEM(data)
+		if !success {
+			panic("Failed to parse ca certificate as PEM encoded content!")
+		}
 		tlsConf.RootCAs = certPool
 		return tlsConf
 	}
