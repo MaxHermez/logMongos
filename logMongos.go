@@ -2,10 +2,7 @@ package logMongos
 
 import (
 	"context"
-	"crypto/tls"
-	"crypto/x509"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strings"
 	"time"
@@ -113,14 +110,8 @@ func (x Conn) emptyBuffer() {
 }
 
 func parseURI(shards string, replica string, db string) string {
-	uri := "mongodb://fwmaster-shard-00-00.5cnit.mongodb.net:27017,fwmaster-shard-00-01.5cnit.mongodb.net:27017,fwmaster-shard-00-02.5cnit.mongodb.net:27017/Logs?authSource=%24external&authMechanism=MONGODB-X509&retryWrites=true&w=majority&tlsCertificateKeyFile=/etc/ssl/certs/mongocert.pem"
-	return uri
-}
-
-func getTLSconf() *tls.Config {
 	cwd, _ := os.Getwd()
 	path := ""
-	tlsConf := &tls.Config{}
 	// check if it's a Windows or Linux URI
 	if strings.Contains(cwd, "\\") {
 		path = cwd + "\\cert.pem"
@@ -131,26 +122,14 @@ func getTLSconf() *tls.Config {
 		log.Fatalf("Could not find the cert.pem file i the CWD, nor in the /etc/ssl/certs directory")
 		panic("Please copy a certificate file from mongoDB into the CWD and rename it to mongocert.pem")
 	} else {
-		data, err := ioutil.ReadFile(path)
-		if err != nil {
-			panic("Failed to open the mongocert.pem file!")
-		}
-		certPool := x509.NewCertPool()
-		success := certPool.AppendCertsFromPEM(data)
-		if !success {
-			panic("Failed to parse ca certificate as PEM encoded content!")
-		}
-		tlsConf.ClientCAs = certPool
-		return tlsConf
+		uri := "mongodb://" + shards + "/" + db + "?authSource=%24external&authMechanism=MONGODB-X509&retryWrites=true&w=majority&tlsCertificateKeyFile=" + path
+		return uri
 	}
 }
 
 func NewConn(shards string, replica string, db string) *Conn {
-	log.SetLevel(log.TraceLevel)
 	URI := parseURI(shards, replica, db)
 	clientOptions := options.Client().ApplyURI(URI)
-	// PEM := getTLSconf()
-	// clientOptions.SetTLSConfig(PEM)
 	return &Conn{db, URI, clientOptions, []Insertion{}}
 }
 
