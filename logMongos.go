@@ -3,6 +3,7 @@ package logMongos
 import (
 	"context"
 	"crypto/tls"
+	"crypto/x509"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -133,10 +134,12 @@ func getTLSconf(original *tls.Config) *tls.Config {
 		if err != nil {
 			panic("Failed to open the mongocert.pem file!")
 		}
-		success := original.RootCAs.AppendCertsFromPEM(data)
+		certPool := x509.NewCertPool()
+		success := certPool.AppendCertsFromPEM(data)
 		if !success {
 			panic("Failed to parse ca certificate as PEM encoded content!")
 		}
+		original.RootCAs = certPool
 		return original
 	}
 }
