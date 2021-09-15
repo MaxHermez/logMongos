@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"reflect"
 	"strings"
 	"time"
 
@@ -151,7 +150,6 @@ func NewConn(shards string, replica string, db string) *Conn {
 	URI := parseURI(shards, replica, db)
 	clientOptions := options.Client().ApplyURI(URI)
 	PEM := getTLSconf()
-	log.Info(reflect.TypeOf(clientOptions.TLSConfig.ClientCAs).String())
 	clientOptions.SetTLSConfig(PEM)
 	return &Conn{db, URI, clientOptions, []Insertion{}}
 }
