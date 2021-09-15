@@ -113,7 +113,7 @@ func (x Conn) emptyBuffer() {
 }
 
 func parseURI(shards string, replica string, db string) string {
-	uri := "mongodb://" + shards + "/" + db + "ssl=true&replicaSet=" + replica + "&authSource=%24external&authMechanism=MONGODB-X509&retryWrites=true&w=majority&tlsCertificateKeyFile=/etc/ssl/certs/mongocert.pem"
+	uri := "mongodb://" + shards + "/" + db + "tls=true&replicaSet=" + replica + "&authSource=%24external&authMechanism=MONGODB-X509&retryWrites=true&w=majority&tlsCertificateKeyFile=/etc/ssl/certs/mongocert.pem"
 	return uri
 }
 
