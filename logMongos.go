@@ -2,7 +2,9 @@ package logMongos
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"strings"
 	"time"
@@ -20,6 +22,7 @@ import (
 type Conn struct {
 	DB     string
 	URI    string
+	OPTS   *options.ClientOptions
 	BUFFER []Insertion
 }
 
@@ -108,8 +111,12 @@ func (x Conn) emptyBuffer() {
 	}
 }
 
-func findURI(db string) string {
-	base := "mongodb+srv://fwmaster.5cnit.mongodb.net/" + db + "?authSource=%24external&authMechanism=MONGODB-X509&retryWrites=true&w=majority&tlsCertificateKeyFile="
+func parseURI(shards string, replica string, db string) string {
+	uri := "mongodb://" + shards + "/" + db + "ssl=true&replicaSet=" + replica + "&authSource=%24external&authMechanism=MONGODB-X509&retryWrites=true&w=majority"
+	return uri
+}
+
+func getTLScert() []byte {
 	cwd, _ := os.Getwd()
 	path := ""
 	// check if it's a Windows or Linux URI
@@ -119,17 +126,25 @@ func findURI(db string) string {
 		path = "/etc/ssl/certs/mongocert.pem"
 	}
 	if _, err := os.Stat(path); err != nil {
-		log.Fatalf("Could not find the cert.pem file i the CWD")
-		panic("Please copy a certificate file from mongoDB into the CWD and rename it to cert.pem")
+		log.Fatalf("Could not find the cert.pem file i the CWD, nor in the /etc/ssl/certs directory")
+		panic("Please copy a certificate file from mongoDB into the CWD and rename it to mongocert.pem")
 	} else {
-		return base + path
+		data, err := ioutil.ReadFile(path)
+		if err != nil {
+			panic("Failed to open the mongocert.pem file!")
+		}
+		return data
 	}
 }
 
-func NewConn(db string) *Conn {
-	URI := findURI(db)
-	log.Println(URI)
-	return &Conn{db, URI, []Insertion{}}
+func NewConn(shards string, replica string, db string) *Conn {
+	URI := parseURI(shards, replica, db)
+	PEMfile := getTLScert()
+	clientOptions := options.Client().ApplyURI(URI)
+	tlsOpts := tls.Config{}
+	tlsOpts.ClientCAs.AppendCertsFromPEM(PEMfile)
+	clientOptions.SetTLSConfig(&tlsOpts)
+	return &Conn{db, URI, clientOptions, []Insertion{}}
 }
 
 // InsertPost ...(column, timestamp, level, message) into the DB
@@ -457,8 +472,8 @@ func (x Conn) GetHubsCount(col string, since string) ([]HubsGroupCount, error) {
 
 func getClient(x Conn) (*mongo.Client, context.Context, context.CancelFunc, error) {
 	ctx, cancel := context.WithCancel(context.Background())
-	clientOptions := options.Client().ApplyURI(x.URI)
-	client, err := mongo.Connect(context.TODO(), clientOptions)
+
+	client, err := mongo.Connect(context.TODO(), x.OPTS)
 	if err != nil {
 		log.Error("Failed to get mongodb client, error message: " + err.Error())
 		cancel()
