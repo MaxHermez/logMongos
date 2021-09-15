@@ -133,12 +133,10 @@ func getTLSconf(original *tls.Config) *tls.Config {
 		if err != nil {
 			panic("Failed to open the mongocert.pem file!")
 		}
-		caCerts := original.RootCAs
-		success := caCerts.AppendCertsFromPEM(data)
+		success := original.RootCAs.AppendCertsFromPEM(data)
 		if !success {
 			panic("Failed to parse ca certificate as PEM encoded content!")
 		}
-		original.RootCAs = caCerts
 		return original
 	}
 }
