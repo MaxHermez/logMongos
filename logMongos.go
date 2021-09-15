@@ -117,9 +117,10 @@ func parseURI(shards string, replica string, db string) string {
 	return uri
 }
 
-func getTLSconf(original *tls.Config) *tls.Config {
+func getTLSconf() *tls.Config {
 	cwd, _ := os.Getwd()
 	path := ""
+	tlsConf := &tls.Config{}
 	// check if it's a Windows or Linux URI
 	if strings.Contains(cwd, "\\") {
 		path = cwd + "\\cert.pem"
@@ -139,8 +140,8 @@ func getTLSconf(original *tls.Config) *tls.Config {
 		if !success {
 			panic("Failed to parse ca certificate as PEM encoded content!")
 		}
-		original.RootCAs = certPool
-		return original
+		tlsConf.RootCAs = certPool
+		return tlsConf
 	}
 }
 
@@ -148,7 +149,7 @@ func NewConn(shards string, replica string, db string) *Conn {
 	log.SetLevel(log.TraceLevel)
 	URI := parseURI(shards, replica, db)
 	clientOptions := options.Client().ApplyURI(URI)
-	PEM := getTLSconf(clientOptions.TLSConfig)
+	PEM := getTLSconf()
 	clientOptions.SetTLSConfig(PEM)
 	return &Conn{db, URI, clientOptions, []Insertion{}}
 }
