@@ -109,7 +109,7 @@ func (x Conn) emptyBuffer() {
 	}
 }
 
-func parseURI(shards string, replica string, db string) string {
+func parseURI(shards string, db string) string {
 	cwd, _ := os.Getwd()
 	path := ""
 	// check if it's a Windows or Linux URI
@@ -127,8 +127,8 @@ func parseURI(shards string, replica string, db string) string {
 	}
 }
 
-func NewConn(shards string, replica string, db string) *Conn {
-	URI := parseURI(shards, replica, db)
+func NewConn(shards string, db string) *Conn {
+	URI := parseURI(shards, db)
 	clientOptions := options.Client().ApplyURI(URI)
 	return &Conn{db, URI, clientOptions, []Insertion{}}
 }
