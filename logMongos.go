@@ -117,7 +117,6 @@ func parseURI(shards string, replica string, db string) string {
 }
 
 func getTLSconf(original *tls.Config) *tls.Config {
-	tlsConf := &tls.Config{}
 	cwd, _ := os.Getwd()
 	path := ""
 	// check if it's a Windows or Linux URI
@@ -140,7 +139,7 @@ func getTLSconf(original *tls.Config) *tls.Config {
 			panic("Failed to parse ca certificate as PEM encoded content!")
 		}
 		original.RootCAs = caCerts
-		return tlsConf
+		return original
 	}
 }
 
